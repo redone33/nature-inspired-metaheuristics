@@ -29,13 +29,17 @@ import sys
 sys.path.append('../')
 import benchmark
 import numpy as np
-from copy import deepcopy
+import time
+import matplotlib.pyplot as plt
+from matplotlib.animation import PillowWriter
 
 # TODO: add wca_config and use it for different params
 def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=100):
 
+    start = time.time()
     # ------------ Create initial population ------------------------------------
     class Individual:
+        __slots__ = ("position", "cost")
         def __init__(self, position, cost):
             self.position = position
             self.cost = cost
@@ -50,10 +54,8 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
 
     population = initialize_population()
 
-    sea = population[0]
-    rivers = population[1:nsr]
-    streams = population[nsr:]
-
+    sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
+    
     for p in population:
         print(str(p.position) + " cost: " + str(p.cost))
     # -------------------------------------------------------------------------
@@ -72,11 +74,9 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
     # Adjust stream allocation based on cost differences and normalize
     sr_adjusted = abs((Csr - Cs1) / sum(Csr))
     NS = np.round(sr_adjusted * len(streams))
-    #print(NS)
     
     # Normalize NS to ensure the sum of streams allocated almost matches the total number of streams
     NS = (NS / NS.sum() * len(streams)).astype(int)
-    #print(NS)
 
     #---------- NS Modification START -------------------------------------
 
@@ -89,19 +89,17 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
             NS[i-1] = NS[i-1] - 1
         else:
             i -= 1
-    #print(NS)
 
     # Ensure that the total number of streams matches the available streams, adding remaining streams to the sea
     if(sum(NS) < len(streams)):
         NS[0] = NS[0] + len(streams) - sum(NS)
-    #print(NS)
     
     # Prevent any river or sea from having zero streams allocated
-    trailing_zeros_start = np.count_nonzero(NS[::-1])  # Start index of trailing zeros
+    trailing_zeros_start = np.count_nonzero(NS[::-1])  
 
     if trailing_zeros_start > 0 and trailing_zeros_start < len(NS):  # Only proceed if there are trailing zeros
-        for idx in range(trailing_zeros_start, len(NS)):  # Loop through trailing zeros
-            while NS[idx] == 0:  # Fix each zero element
+        for idx in range(trailing_zeros_start, len(NS)):  
+            while NS[idx] == 0:  
                 for i in range(trailing_zeros_start - 1, -1, -1):  # Redistribute from earlier elements
                     if i >= 0 and i < len(NS):  
                         if NS[i] > 1:  # Ensure at least one stream remains in the source
@@ -109,14 +107,11 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
                             NS[idx] += redistribution 
                             NS[i] -= redistribution  
                             break  # Move to the next zero
-    
-    #print("No more rivers with zero streams allocated")
-    #print(NS)
-    
+     
     NS = np.sort(NS)[::-1]
     print(NS)
 
-    #------ NS Modification END -------------------------------------------
+    #------ NS Modification END -----------------------------------------------
 
     #-------- Alocate number of streams for each sea and river END ------------
 
@@ -128,7 +123,6 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
     #----------- Exploration phase --------------------------------------------
 
     for it in range(max_it):
-        #print("iteration: " + str(it))
 
         #-------- Moving stream to sea ----------------------------------------
         for i in range(0, NS[0]):
@@ -142,9 +136,7 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
 
         #------- Moving streams to rivers ---------------------------------------
         for k in range(0, len(rivers)):
-            #print("k: " + str(k))
             for j in range(sum(NS[0:k+1]), sum(NS[0:k+1]) + NS[k+1]):
-                #print("j: " + str(j))
                 streams[j].position += np.random.rand() * 2 * (rivers[k].position - streams[j].position)
                 streams[j].position = np.clip(streams[j].position, LB, UB)
                 streams[j].cost = objective_function(streams[j].position.reshape(1, -1))[0]
@@ -159,7 +151,7 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
                         rivers[k] = sea
                         sea = new_sea
 
-        #------- Moving rivers to sea ---------------------------------------
+        #------- Moving rivers to sea --------------------------------------------
         for i in range(0, len(rivers)):
             rivers[i].position += np.random.rand() * 2 * (sea.position - rivers[i].position)
             rivers[i].position = np.clip(rivers[i].position, LB, UB)
@@ -169,7 +161,7 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
                 rivers[i] = sea
                 sea = new_sea
 
-        #---------------- Evaporation condition and raining process--------------
+        #---------------- Evaporation condition and raining process----------------
         
         # Evaporation condition for rivers and sea
         for k in range(len(rivers)):
@@ -191,23 +183,16 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
         # Gradually decrease dmax
         dmax -= dmax / max_it
 
-        
-
         # update population
-        #population = [sea] + rivers + streams
-        #population = sorted(population, key=lambda ind: ind.cost)
-        #sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
-        '''print("OLD_POP:")
-        for pop in population:
-            print(str(pop.position) + ", " + str(pop.cost))'''
-
         population = [sea] + rivers + streams
         population = sorted(population, key=lambda ind: ind.cost)
-        '''print("NEW_POP:")
-        for pop in population:
-            print(str(pop.position) + ", " + str(pop.cost))
-            #print(pop.cost)'''
+        sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
+        
         # Display iteration results
         print(f"Iteration: {it + 1}, Position: {sea.position}, Fmin: {sea.cost}")
+    
+    end = time.time()
+    print(f"sea: Position: {sea.position}, Fmin: {sea.cost}")
+    print(f"elapsed_time: {end - start}")
 
-print(wca(benchmark.sphere_func,-5,5,2))    
+print(wca(benchmark.sphere_func, -5, 5, 2))    
