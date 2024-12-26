@@ -3,12 +3,23 @@
 '''
 import numpy as np
 import matplotlib.pyplot as plt
-import benchmark
+import algorithms
+import algorithms.WCA
 
-def visualize(func, algo):
+def visualize(func, algo, gif=False, real_time=False):
     if algo is not None:
-        # TODO: Create function that runs algorithm on function and visualize it as animation
-        print("Algorithm is " + algo)
+        print(f"Visualizing algorithm {algo} running on {func}...")
+
+        match algo:
+            case "WCA":
+                config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 50, "nsr": 4, "dmax": 1e-16, "max_it": 100}
+                if gif:
+                    algorithms.WCA.wca(func, config, gif=True)
+                if real_time:
+                    algorithms.WCA.wca(func, config, real_time=True)
+            case _:
+                return f"Algorithm {algo} does not exists!"
+
     else:
         # TODO: Make bounds configurabile (in args?)
         bounds = [-5, 5] 

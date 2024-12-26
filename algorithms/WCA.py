@@ -32,11 +32,20 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from matplotlib.animation import PillowWriter
+from matplotlib.animation import FuncAnimation
 
-# TODO: add wca_config and use it for different params
-def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=100):
+def wca(objective_function, config, gif=False, real_time=False):
 
     start = time.time()
+    
+    # ------------ Read config params -------------------------------------------
+    LB, UB = config.get("LB", -5), config.get("UB", 5)
+    nvars = config.get("nvars", 2)
+    npop = config.get("npop", 50)
+    nsr = config.get("nsr", 4)
+    dmax = config.get("dmax", 1e-16)
+    max_it = config.get("max_it", 100)
+    
     # ------------ Create initial population ------------------------------------
     class Individual:
         __slots__ = ("position", "cost")
@@ -80,8 +89,6 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
 
     #---------- NS Modification START -------------------------------------
 
-    # TODO: Add NS Modification to function
-
     # Ensure total number of streams in NS don't exceed number of streams
     i = len(NS) # number of rivers + sea
     while(sum(NS) > len(streams)):
@@ -113,18 +120,129 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
 
     #------ NS Modification END -----------------------------------------------
 
-    #-------- Alocate number of streams for each sea and river END ------------
-
     #----------- Main Loop for WCA --------------------------------------------
     print("******************** Water Cycle Algorithm (WCA)********************")
     print("*Iterations     Function Values *")
     print("********************************************************************")
 
-    #----------- Exploration phase --------------------------------------------
+    if gif:
+        # Save visualization as .gif file
 
-    for it in range(max_it):
+        # Set up the figure and writer
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection="3d")
+        writer = PillowWriter(fps=1)
 
-        #-------- Moving stream to sea ----------------------------------------
+        x = np.linspace(LB, UB, 100)
+        y = np.linspace(LB, UB, 100)
+        X, Y = np.meshgrid(x, y)
+        points = np.stack([X.ravel(), Y.ravel()], axis=1)
+        Z = objective_function(points).reshape(X.shape)
+
+        with writer.saving(fig, "gifs//WCA.gif", dpi=100):
+            for it in range(max_it):
+
+                # Clear the axis
+                ax.clear()
+
+                # Plot the 3D surface
+                ax.plot_surface(X, Y, Z, cmap="viridis", alpha=0.8)
+
+                # Plot sea, rivers, and streams
+                ax.scatter(sea.position[0], sea.position[1], sea.cost, c="red", s=80, label="Sea")
+                for river in rivers:
+                    ax.scatter(river.position[0], river.position[1], river.cost, c="green", s=50, label="River")
+                for stream in streams:
+                    ax.scatter(stream.position[0], stream.position[1], stream.cost, c="blue", s=10, label="Stream")
+
+                ax.set_title(f"Iteration {it + 1}")
+                ax.set_xlabel("X1")
+                ax.set_ylabel("X2")
+                ax.set_zlabel("Cost")
+
+                handles, labels = ax.get_legend_handles_labels()
+                by_label = dict(zip(labels, handles))
+                ax.legend(by_label.values(), by_label.keys(), loc="upper right")
+
+                # Save the frame
+                writer.grab_frame()
+
+                population, dmax = exploration_phase(objective_function, LB, UB, nvars, max_it, NS, dmax, sea, rivers, streams)
+                sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
+                print(f"Iteration: {it + 1}, Position: {sea.position}, Fmin: {sea.cost}")
+
+    elif real_time:
+        # Run algorithm with real-time visualization
+
+        # Set up the figure
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection="3d")
+        
+        x = np.linspace(LB, UB, 100)
+        y = np.linspace(LB, UB, 100)
+        X, Y = np.meshgrid(x, y)
+        points = np.stack([X.ravel(), Y.ravel()], axis=1)
+        Z = objective_function(points).reshape(X.shape)
+
+        def update(frame):
+            nonlocal sea, rivers, streams, dmax
+
+            # Clear the axis
+            ax.clear()
+
+            # Plot the 3D surface
+            ax.plot_surface(X, Y, Z, cmap="viridis", alpha=0.8)
+
+            # Update positions for the sea, rivers, and streams
+            sea_positions = [sea.position]
+            river_positions = [river.position for river in rivers]
+            stream_positions = [stream.position for stream in streams]
+
+            sea_costs = [sea.cost]
+            river_costs = [river.cost for river in rivers]
+            stream_costs = [stream.cost for stream in streams]
+
+            # Scatter plot updates
+            ax.scatter(*zip(*sea_positions), sea_costs, c="red", s=80, label="Sea")
+            ax.scatter(*zip(*river_positions), river_costs, c="green", s=50, label="Rivers")
+            ax.scatter(*zip(*stream_positions), stream_costs, c="blue", s=10, label="Streams")
+
+            ax.set_title(f"Iteration {frame + 1}")
+            ax.set_xlabel("X1")
+            ax.set_ylabel("X2")
+            ax.set_zlabel("Cost")
+
+            handles, labels = ax.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            ax.legend(by_label.values(), by_label.keys(), loc="upper right")
+
+            population, dmax = exploration_phase(objective_function, LB, UB, nvars, max_it, NS, dmax, sea, rivers, streams)
+            sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
+
+        # Animation
+        ani = FuncAnimation(fig, update, frames=max_it, repeat=False)
+        plt.show()
+
+        end = time.time()
+        print(f"sea: Position: {sea.position}, Fmin: {sea.cost}")
+        print(f"elapsed_time: {end - start}")
+
+    else:
+        # Run algorithm without visualization
+        for it in range(max_it):
+            population, dmax = exploration_phase(objective_function, LB, UB, nvars, max_it, NS, dmax, sea, rivers, streams) 
+            sea, rivers, streams = population[0], population[1:nsr], population[nsr:] 
+            print(f"Iteration: {it + 1}, Position: {sea.position}, Fmin: {sea.cost}")
+    
+    end = time.time()
+    print(f"sea: Position: {sea.position}, Fmin: {sea.cost}")
+    print(f"elapsed_time: {end - start}")
+
+
+
+def exploration_phase(objective_function, LB, UB, nvars, max_it, NS, dmax, sea, rivers, streams):
+        
+    #-------- Moving stream to sea ----------------------------------------
         for i in range(0, NS[0]):
             streams[i].position += np.random.rand() * 2 * (sea.position - streams[i].position)
             streams[i].position = np.clip(streams[i].position, LB, UB)
@@ -186,13 +304,6 @@ def wca(objective_function, LB, UB, nvars, npop=50, nsr=4, dmax=1e-16, max_it=10
         # update population
         population = [sea] + rivers + streams
         population = sorted(population, key=lambda ind: ind.cost)
-        sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
+        #sea, rivers, streams = population[0], population[1:nsr], population[nsr:]
         
-        # Display iteration results
-        print(f"Iteration: {it + 1}, Position: {sea.position}, Fmin: {sea.cost}")
-    
-    end = time.time()
-    print(f"sea: Position: {sea.position}, Fmin: {sea.cost}")
-    print(f"elapsed_time: {end - start}")
-
-print(wca(benchmark.sphere_func, -5, 5, 2))    
+        return population, dmax
