@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import algorithms
+import algorithms.TGA
 import algorithms.WCA
 
 def visualize(func, algo, gif=False, real_time=False):
@@ -17,6 +18,12 @@ def visualize(func, algo, gif=False, real_time=False):
                     algorithms.WCA.wca(func, config, gif=True)
                 if real_time:
                     algorithms.WCA.wca(func, config, real_time=True)
+            case "TGA":
+                config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 100, "N1": 40, "N2": 40, "N3": 20, "N4": 30, "lambda": 0.5, "theta": 1.1, "max_it": 100}
+                if gif:
+                    algorithms.TGA.tga(func, config, gif=True)
+                if real_time:
+                    algorithms.TGA.tga(func, config, real_time=True)
             case _:
                 return f"Algorithm {algo} does not exists!"
 

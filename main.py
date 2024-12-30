@@ -1,4 +1,5 @@
 import argparse
+import algorithms.TGA
 import algorithms.WCA
 import visualizer
 import benchmark
@@ -35,7 +36,7 @@ def parse_args():
     parser.add_argument(
         "--algorithm", "-alg",
         type=str,
-        choices=["WCA"],  # Add other algorithm names if needed
+        choices=["WCA", "TGA"],  # Add other algorithm names if needed
         help="Name of the algorithm to run on the specified function."
     )
 
@@ -106,7 +107,11 @@ def run_algorithm(function_name, algorithm):
     if algorithm == "WCA":
         print(f"Running WCA on {function_name}...")
         config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 50, "nsr": 4, "dmax": 1e-16, "max_it": 100}
-        algorithms.WCA.wca(func, config, gif=False, real_time=False) 
+        algorithms.WCA.wca(func, config, gif=False, real_time=False)
+    elif algorithm == "TGA":
+        print(f"Running TGA on {function_name}...")
+        config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 100, "N1": 40, "N2": 40, "N3": 20, "N4": 30, "lambda": 0.5, "theta": 1.1, "max_it": 100}
+        algorithms.TGA.tga(func, config, gif=False, real_time=False) 
     else:
         print(f"Algorithm '{algorithm}' is not recognized.")
 
