@@ -31,6 +31,18 @@ $ python main.py --visualize --function_name spehere_func -alg WCA -gif
 
 - Feel free to add more benchmark functions and algorithms
 
+## Benchmark functions
+
+- sphere_func, elliptic_func, schwefel_func, rosenbrock_func, rastrigin_func, ackley_rot_func
+
+## Implemented algorithms:
+
+- WCA (Water Cycle Algorithm)
+- TGA (Tree Growth Algorithm)
+- MBO (Monarch Butterfly Optimization)
+
 ## References
 
-- https://www.sciencedirect.com/science/article/pii/S2352711016300024
+- https://www.sciencedirect.com/science/article/pii/S2352711016300024 - WCA (Water Cycle Algorithm)
+- https://www.researchgate.net/publication/320009185_Tree_Growth_Algorithm_TGA_An_Effective_Metaheuristic_Algorithm_Inspired_by_trees'_behavior - TGA (Tree Growth Algorithm)
+- https://link.springer.com/article/10.1007/s00521-015-1923-y - MBO (Monarch Butterfly Optimization)
