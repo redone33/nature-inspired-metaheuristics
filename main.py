@@ -1,6 +1,7 @@
 import argparse
 import algorithms.TGA
 import algorithms.WCA
+import algorithms.MBO
 import visualizer
 import benchmark
 import algorithms
@@ -36,7 +37,7 @@ def parse_args():
     parser.add_argument(
         "--algorithm", "-alg",
         type=str,
-        choices=["WCA", "TGA"],  # Add other algorithm names if needed
+        choices=["WCA", "TGA", "MBO"],  # Add other algorithm names if needed
         help="Name of the algorithm to run on the specified function."
     )
 
@@ -112,6 +113,10 @@ def run_algorithm(function_name, algorithm):
         print(f"Running TGA on {function_name}...")
         config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 100, "N1": 40, "N2": 40, "N3": 20, "N4": 30, "lambda": 0.5, "theta": 1.1, "max_it": 100}
         algorithms.TGA.tga(func, config, gif=False, real_time=False) 
+    elif algorithm == "MBO":
+        print(f"Running MBO on {function_name}...")
+        config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 100, "Keep": 2, "p": 0.4167, "period": 1.2, "smax": 1.0, "BAR": 0.4167, "max_it": 100}
+        algorithms.MBO.mbo(func, config, gif=False, real_time=False)
     else:
         print(f"Algorithm '{algorithm}' is not recognized.")
 

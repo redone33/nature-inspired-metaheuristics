@@ -32,8 +32,7 @@
 import numpy as np
 import time
 import matplotlib.pyplot as plt
-from matplotlib.animation import PillowWriter
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import PillowWriter, FuncAnimation
 
 class Tree:
     __slots__ = ("position", "cost")
