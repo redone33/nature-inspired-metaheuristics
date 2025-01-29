@@ -3,36 +3,20 @@
 '''
 import numpy as np
 import matplotlib.pyplot as plt
-import algorithms
-import algorithms.MBO
-import algorithms.TGA
-import algorithms.WCA
+from algorithms.algorithm_config import algorithm_mapping
 
 def visualize(func, algo, gif=False, real_time=False):
     if algo is not None:
         print(f"Visualizing algorithm {algo} running on {func}...")
+        
+        algo_info = algorithm_mapping.get(algo)
+        if not algo_info:
+            return f"Algorithm {algo} does not exist!"
 
-        match algo:
-            case "WCA":
-                config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 50, "nsr": 4, "dmax": 1e-16, "max_it": 100}
-                if gif:
-                    algorithms.WCA.wca(func, config, gif=True)
-                if real_time:
-                    algorithms.WCA.wca(func, config, real_time=True)
-            case "TGA":
-                config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 100, "N1": 40, "N2": 40, "N3": 20, "N4": 30, "lambda": 0.5, "theta": 1.1, "max_it": 100}
-                if gif:
-                    algorithms.TGA.tga(func, config, gif=True)
-                if real_time:
-                    algorithms.TGA.tga(func, config, real_time=True)
-            case "MBO":
-                config = {"LB": -5, "UB": 5, "nvars": 2, "npop": 100, "Keep": 2, "p": 0.4167, "period": 1.2, "smax": 1.0, "BAR": 0.4167, "max_it": 100}
-                if gif:
-                    algorithms.MBO.mbo(func, config, gif=True)
-                if real_time:
-                    algorithms.MBO.mbo(func, config, real_time=True)
-            case _:
-                return f"Algorithm {algo} does not exists!"
+        algo_func = algo_info["module"]
+        config = algo_info["config"]
+
+        algo_func(func, config, gif=gif, real_time=real_time)
 
     else:
         # TODO: Make bounds configurabile (in args?)
