@@ -1,8 +1,26 @@
 import numpy as np
 
-'''
+"""
     File that contains benchmark functions
-'''
+"""
+
+def rotation_matrix_2d(theta):
+    """
+    Returns a 2D rotation matrix that rotates points in the plane by an angle theta (in radians).
+    
+    Parameters:
+        theta (float): The angle in radians by which to rotate.
+        
+    Returns:
+        numpy.ndarray: A 2x2 rotation matrix.
+    """
+    return np.array([
+        [np.cos(theta), -np.sin(theta)],
+        [np.sin(theta),  np.cos(theta)]
+    ])
+
+theta = np.pi / 4 # 45 degrees in radians
+rot_matrix = rotation_matrix_2d(theta)
 
 # Sphere Function
 def sphere_func(x):
@@ -18,7 +36,7 @@ def elliptic_func(x):
     return fit
 
 # Rotated Elliptic Function
-def elliptic_rot_func(x, M):
+def elliptic_rot_func(x, M = rot_matrix):
     x_rotated = x @ M
     return elliptic_func(x_rotated)
 
@@ -40,7 +58,7 @@ def rastrigin_func(x):
     return np.sum(x**2 - 10 * np.cos(2 * np.pi * x) + 10, axis=1)
 
 # Rotated Rastrigin's Function
-def rastrigin_rot_func(x, M):
+def rastrigin_rot_func(x, M = rot_matrix):
     x_rotated = x @ M
     return rastrigin_func(x_rotated)
 
@@ -52,6 +70,6 @@ def ackley_func(x):
     return 20 - 20 * np.exp(fit1) - np.exp(fit2) + np.exp(1)
 
 # Rotated Ackley's Function
-def ackley_rot_func(x, M):
+def ackley_rot_func(x, M = rot_matrix):
     x_rotated = x @ M
     return ackley_func(x_rotated)
