@@ -9,6 +9,19 @@
 
 - Write a simple program to run and visualize some of nature inspired algorithms in 3D.
 
+## Installation
+
+Requires Python 3 (developed with 3.12).
+
+```console
+$ git clone <repository-url>
+$ cd nioa
+$ python -m venv venv
+$ venv\Scripts\activate        # Windows
+$ source venv/bin/activate     # Linux / macOS
+$ pip install -r requirements.txt
+```
+
 ## Quick start
 
 ```console
@@ -46,3 +59,4 @@ $ python main.py --visualize --function_name spehere_func -alg WCA -gif
 - https://www.sciencedirect.com/science/article/pii/S2352711016300024 - WCA (Water Cycle Algorithm)
 - https://www.researchgate.net/publication/320009185_Tree_Growth_Algorithm_TGA_An_Effective_Metaheuristic_Algorithm_Inspired_by_trees'_behavior - TGA (Tree Growth Algorithm)
 - https://link.springer.com/article/10.1007/s00521-015-1923-y - MBO (Monarch Butterfly Optimization)
+- https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9680690 - PSO (Particle Swarm Optimization)
